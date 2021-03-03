@@ -1,4 +1,3 @@
-import pyperclip
 import win32com.client as client
 
 # Variables:
