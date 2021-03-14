@@ -1,64 +1,122 @@
-import pyperclip
+import win32com.client as client
+import time
 
-# CR
-print("Please insert your CR:")
-CR = input()
+# Variables:
+outlook = client.Dispatch('Outlook.Application')
+message = outlook.CreateItem(0)
+signature = "\n\nBest regards,\nLuis Villamizar"
+CR = input("Please insert your CR:\n")
+aip_client = input("Please insert your Client:\n")
+aip_env = input("Which environment is this?\n")
+instances_lst = []
+aip_clenv = aip_client + " " + aip_env
+instances_n = input("How many instances have been affected?\n")
+instances_n = int(instances_n)
+
+if instances_n != 0:
+    for x in range(0,instances_n):
+        print(str("Insert instance"+ str(x+1) +" name+tab+ip:")) 
+        instance = input()
+        instances_lst.append(str("\n" + instance))
+else:
+    pass
+
+# Functions
+def mail(w, x, y, z):
+    message.Display()
+    message.To = w
+    message.CC = x
+    message.Subject = y
+    message.Body = z + str_instances_lst +signature
+
+# Function to convert a list to string
+def listToString(list):  
+    string = ""
+    for i in list:
+        str(i+ "\n")
+    return (string.join(list))
+
+
+str_instances_lst = listToString(instances_lst)
+
+# Recipients mails
+recipients = {
+    "elk": "aip.elk@accenture.com",
+    "cp": "aip.engineering.global@accenture.com;PDC.IS.AIP.MSS.SOC@accenture.com;AIP.L2@accenture.com;AIP.L2.Region_Leads@accenture.com",
+    "enablement": "AIP_Enablement@accenture.com;",
+    "keys": "AIP.Cloud.Key.Management.team@accenture.com",
+    "qualys": "aip.security@accenture.com;AIP_NESSUS@accenture.com",
+    "patching": "aip.patchmgt.global@accenture.com"
+}
 
 start_menu="Please select an email option:\n \
     a-Deployment. \n \
-    b-Decommission"
+    b-Decommission\n \
+    c-Exit\n"
 
 Deployment_menu = "Please select an option:\n \
     a-Communication Plan For newly launched Instance/s\n \
     b-Update Patching list\n \
-    c-ELK Signoff"
-deplo_options = {
-  "a": str("Hi Team,\n\nBelow instance has been provisioned for H365 Dev as part of "+CR+":"),
-  "b": str("Hi Team,\n\nBelow instance has been provisioned for Sun Chemicals Prod as part of "+CR+", please add it to patching list."),
-  "c": "Hi elk team,\n\nCan you please check if logs are reaching to Kibana from this instance:"
+    c-ELK Signoff\n \
+    d-Key Hardening\n"
+dep_msgs = {
+    "a": str("Hi Team,\n\nBelow instance has been provisioned for "+ aip_clenv +" as part of "+CR+":"),
+    "b": str("Hi Team,\n\nBelow instance has been provisioned for "+ aip_clenv +" as part of "+CR+", please add it to patching list."),
+    "c": str("Hi elk team,\n\nCan you please check if logs are reaching to Kibana from this instance:\n"+ aip_clenv),
+    "d": str("Hi patching team,\n\nPlease provide sign off for below servers:\n"+ aip_clenv),
+    "e": str("Hi team,\n\nNew instance is been deployed in "+ aip_clenv +" as part of "+ CR +", Could you please perform key hardening.")
 }
 Decommission_menu = "Please select an option:\n \
     a-Communication Plan For newly decommisioned Instance/s\n \
     b-Remove entries from vault\n \
     c-Remove instance from Qualys\n \
     d-Remove from patching list"
-dec_options = {
-    "a": str("Hi Team,\n\nBelow instances are being decommissioned as part of "+CR+":"),
-    "b": "Hi Team,\n\nPlease remove below entries from vault:",
-    "c": str("Hi Team,\n\nCould please remove below instances from Qualys as requested on "+CR+":"),
-    "d": "Please remove below instances from patching list:"
+dec_msgs = {
+    "a": str("Hi Team,\n\nBelow instances are being decommissioned as part of "+ CR +":"),
+    "b": str("Hi Team,\n\nPlease remove below entries from " + aip_clenv + " from vault as per instances decommission:"),
+    "c": str("Hi Team,\n\nBelow instance has been decommissioned from "+ aip_clenv +" as part of "+CR+", please remove from Qualys."),
+    "d": str("Hi Team,\n\nPlease remove below instances from " + aip_clenv + " from patching list:")
+}
+subjects = {
+    "subj-dp-a": str("Communication Plan For newly launched Instance || "+ CR),
+    "subj-dp-b": str("Patching list || "+ CR),
+    "subj-dp-c": str("ELK sign off || "+ CR),
+    "subj-dp-d": str("Perform key hardening || "+ CR),
+   #"subj-dp-d": str("Patching sign off || "+aip_client+" "+aip_env),
+    "subj-dc-a": str("Communication Plan For Instance Decommission || "+ CR),
+    "subj-dc-b&c": str("Servers Decommission || "+ CR),
+    "subj-dc-d": str("Patching list || "+ CR)
 }
 
-# START MENU
-print(start_menu)
-start_option = input()
-
-# Deployment mails
-if start_option == "a":
-    print(Deployment_menu)
-    dep_option = input()
+def deployment():
+    dep_option = input(Deployment_menu)
     if dep_option == "a":
-        pyperclip.copy(deplo_options["a"])
+        mail(recipients["cp"], recipients["enablement"], subjects["subj-dp-a"], dep_msgs["a"])
     elif dep_option == "b":
-        pyperclip.copy(deplo_options["b"])
+        mail(recipients["patching"], recipients["enablement"], subjects["subj-dp-b"], dep_msgs["b"])
     elif dep_option == "c":
-        pyperclip.copy(deplo_options["c"])
-    else: 
-        print("Invalid option.\n", Deployment_menu)
-# Decommission mails
-elif start_option == "b":
-    print(Decommission_menu)
-    dec_option = input()
-    if dec_option == "a":
-        pyperclip.copy(dec_options["a"])
-    elif dec_option == "b":
-        pyperclip.copy(dec_options["b"])
-    elif dep_option == "c":
-        pyperclip.copy(dec_options["c"])
+        mail(recipients["elk"], recipients["enablement"], subjects["subj-dp-c"], dep_msgs["c"])
     elif dep_option == "d":
-        pyperclip.copy(dec_options["d"])
-    else:
-        print("Invalid option.\n", Decommission_menu)
-else:
-    print("Invalid option", start_menu)
+        mail(recipients["keys"], recipients["enablement"], subjects["subj-dp-d"], dep_msgs["e"])
 
+def decommission():
+    dec_option = input(Decommission_menu) 
+    if dec_option == "a":
+        mail(recipients["cp"], recipients["enablement"], subjects["subj-dc-a"], dec_msgs["a"])
+    elif dec_option == "b":
+        mail(recipients["keys"], recipients["enablement"], subjects["subj-dc-b&c"], dec_msgs["b"])
+    elif dec_option == "c":
+        mail(recipients["qualys"], recipients["enablement"], subjects["subj-dc-b&c"], dec_msgs["c"])
+    elif dec_option == "d":
+        mail(recipients["patching"], recipients["enablement"], subjects["subj-dc-d"], dec_msgs["d"])
+
+while True:
+    outlook = client.Dispatch('Outlook.Application')
+    message = outlook.CreateItem(0)
+    start_option = input(start_menu)
+    if start_option == "a":
+        deployment()
+    elif start_option == "b":
+        decommission()
+
+    
